@@ -4,8 +4,8 @@ echo off
 % plant and constraints
 g = tf(1, [1 2]);
 w1_high = tf(0);
-w1_low = tf(100);
-w2 = tf([1 1], [0.2 20]);
+w1_low = tf(2.65);
+w2 = tf([10 1], [0.2 20]);
 
 % find 0dB crossing frequencies
 f_perf_end = 1;
@@ -27,7 +27,7 @@ w2_high_f = frd(w2, rob_f_range);
 b_rob = (1 - abs(w1_high_f)) / abs(w2_high_f);
 
 % find a good loop gain
-loop = tf(230, [1 1]) * tf([1/12 1], [1 1]);
+loop = tf(3.2*0.8*[1/2 1], [1 0.8/1.5 0.8]);
 loop_f = frd(loop, f_range);
 
 % plot bounds and loop gain
