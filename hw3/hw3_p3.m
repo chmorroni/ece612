@@ -26,7 +26,7 @@ w2_high_f = frd(w2, rob_f_range);
 b_rob = (1 - abs(w1_high_f)) / abs(w2_high_f);
 
 % find a good loop gain
-loop = tf(20, [1 1]) * tf([1/3 1], [1 1]);
+loop = tf(20, [1/0.5 1]) * tf(1, [1/10 1]);
 loop_f = frd(loop, f_range);
 
 % plot bounds and loop gain
@@ -54,5 +54,8 @@ echo on
 % in case graph is ambiguous, check Hinf norm
 hinfnorm(gamma_f) % must be < 1
 echo off
+
+loop
+k = loop / g
 
 echo on

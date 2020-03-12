@@ -62,4 +62,7 @@ echo on
 hinfnorm(gamma_f) % must be < 1
 echo off
 
+loop
+k = loop / g
+
 echo on
