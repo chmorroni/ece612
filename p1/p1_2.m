@@ -12,7 +12,7 @@ g_d = [0 0; 0 0];
 g = ss(g_a, g_b, g_c, g_d);
 
 % given weights for uncertainty
-w1 = tf([1 9], [1/40 45]);
+w1 = tf([1 2], [1/60 20]);
 w2 = tf([1 9], [1/40 45]);
 w = [w1 0; 0 w2];
 
@@ -26,6 +26,10 @@ input_to_w = '[ka]';
 sleanupsysic = 'yes';
 ma = sysic;
 
+outputvar = '[ka]';
+ta = sysic;
+
+
 % construct kb/g loop
 systemnames = ' g kb w ';
 inputvar = '[u{2}]';
@@ -36,98 +40,35 @@ input_to_w = '[kb]';
 sleanupsysic = 'yes';
 mb = sysic;
 
-
-%% loop-at-a-time analysis for ka
-
-ma_11 = minreal(ma(1, 1)); % get minimum realization
-pole(ma_11); % 2 poles in LHP (@ -1, -1800)
-
-ma_22 = minreal(ma(2, 2)); % get minimum realization
-pole(ma_22); % 2 poles in LHP (@ -1, -1800)
+outputvar = '[kb]';
+tb = sysic;
 
 
-%% MIMO robustness analysis for ka
+%% analyze Ma
 
-% check nominal stability
-pole(ma); % 4 poles in LHP (2 each @ -1, -1800)
+fprintf("Ma LaaT loop 1:\n")
+siso_analysis(ma(1, 1), ta(1, 1), w(1, 1));
+fprintf("\n")
 
-% calculate bounds for mu
-omega_range = logspace(-2, 2, 100);
-ma_f = frd(ma, omega_range);
-blk = [1 1; 1 1]; % 2x 1x1 deltas
-mu_bounds = mussv(ma_f, blk, 'o'); % 'o' for old (not sure why)
+fprintf("Ma LaaT loop 2:\n")
+siso_analysis(ma(2, 2), ta(2, 2), w(2, 2));
+fprintf("\n")
 
-% plot mu bounds
-figure
-semilogx(mu_bounds)
-grid
-title("Mu Bounds vs Frequency for Ka")
-xlabel("Frequency (rad/s)")
-ylabel("Mu Bounds")
-
-% find peak mu
-peak_mu = norm(mu_bounds(1, 1), inf); % = 2.0099
-
-% build uncertainty model
-del1 = ultidyn('del1',[1 1]);
-del2 = ultidyn('del2',[1 1]);
-del = blkdiag(del1, del2);
-a_cl_f = lft(del, ma_f);
-
-% calculate smallest(ish) destabilizing perturbation
-[~, unc] = robuststab(a_cl_f);
-delta1 = unc.del1;
-delta2 = unc.del2;
-delta = blkdiag(delta1, delta2);
-
-% check delta
-max(real(pole(delta))); % = -0.0071, so delta is stable
-norm(delta, inf); % = 0.4975, 1/peak_mu
+fprintf("Ma MIMO:\n")
+mimo_analysis(ma);
+fprintf("\n")
 
 
-%% loop-at-a-time analysis for kb
+%% analyze Mb
 
-mb_11 = minreal(mb(1, 1)); % get minimum realization
-pole(mb_11); % 7 poles in LHP
+fprintf("Mb LaaT loop 1:\n")
+siso_analysis(mb(1, 1), tb(1, 1), w(1, 1));
+fprintf("\n")
 
-mb_22 = minreal(mb(2, 2)); % get minimum realization
-pole(mb_22) % 6 poles in LHP
+fprintf("Mb LaaT loop 2:\n")
+siso_analysis(mb(2, 2), tb(2, 2), w(2, 2));
+fprintf("\n")
 
-
-%% MIMO robustness analysis for kb
-
-% check nominal stability
-pole(mb); % 7 poles in LHP
-
-% calculate bounds for mu
-omega_range = logspace(-2, 2, 100);
-mb_f = frd(mb, omega_range);
-blk = [1 1; 1 1]; % 2x 1x1 deltas
-mu_bounds = mussv(mb_f, blk, 'o'); % 'o' for old (not sure why)
-
-% plot mu bounds
-figure
-semilogx(mu_bounds)
-grid
-title("Mu Bounds vs Frequency for Kb")
-xlabel("Frequency (rad/s)")
-ylabel("Mu Bounds")
-
-% find peak mu
-peak_mu = norm(mu_bounds(1, 1), inf) % = 1.0980
-
-% build uncertainty model
-del1 = ultidyn('del1',[1 1]);
-del2 = ultidyn('del2',[1 1]);
-del = blkdiag(del1, del2);
-b_cl_f = lft(del, mb_f);
-
-% calculate smallest(ish) destabilizing perturbation
-[marg, unc] = robuststab(b_cl_f);
-delta1 = unc.del1;
-delta2 = unc.del2;
-delta = blkdiag(delta1, delta2);
-
-% check delta
-max(real(pole(delta))) % = -0.0071, so delta is stable
-norm(delta, inf) % = 0.9107, 1/peak_mu
+fprintf("Mb MIMO:\n")
+mimo_analysis(mb);
+fprintf("\n")
